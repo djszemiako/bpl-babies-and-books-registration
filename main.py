@@ -2,18 +2,6 @@ import click
 import httpx
 from lxml import etree
 
-def _get_form_data(
-    form_build_id: str,    email_address: str, name: str, surname: str
-) -> dict[str, str]:
-    return {
-        "anon_mail[0][value]": email_address,
-        "form_build_id": form_build_id,
-        "form_id": "registration_basic_registration_register_form",
-        "field_registration_name[0][value]": name,
-        "field_registration_lname[0][value]": surname,
-        "field_registration_enews[value]": "0",
-        "op": "Register"
-    }
 
 @click.command()
 @click.option(
@@ -60,8 +48,6 @@ def main(
                 raise RuntimeError("Registration is closed.")
             elif "capacity" in message:
                 raise RuntimeError("Session is at capacity.")
-        else:
-            raise RuntimeError("Unable to get session's registration.")
 
         form_build_id_values = [i for i in content.xpath(".//input[@name='form_build_id']/@value")]
 
@@ -70,12 +56,15 @@ def main(
 
         form_build_id = form_build_id_values.pop(0)
 
-        form_data = _get_form_data(
-            form_build_id=form_build_id,
-            email_address=email_address,
-            name=name,
-            surname=surname,
-        )
+        form_data = {
+            "anon_mail[0][value]": email_address,
+            "form_build_id": form_build_id,
+            "form_id": "registration_basic_registration_register_form",
+            "field_registration_name[0][value]": name,
+            "field_registration_lname[0][value]": surname,
+            "field_registration_enews[value]": "0",
+            "op": "Register"
+        }
 
         post_response = client.post(url=event_url, data=form_data, follow_redirects=True)
 
